@@ -1,0 +1,24 @@
+{
+    // 강의자료 Ch08 p.7 : 디버깅용 launch.json
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: detect.py (webcam -> PhotoBlogServer)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/detect.py",
+            "args": ["--source", "0", "--server", "http://127.0.0.1:8000", "--device-name", "macbook-cam0"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: detect.py (video file -> PythonAnywhere)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/detect.py",
+            "args": ["--source", "data/videos/intruder_demo.mp4", "--server", "https://vyjsjs.pythonanywhere.com", "--device-name", "edge-video"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

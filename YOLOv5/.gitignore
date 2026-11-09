@@ -254,3 +254,4 @@ fabric.properties
 # 공통평가02 : PythonAnywhere 로 재전송할 감지(outbox) 는 포함
 !edge_outbox/*.jpg
 !edge_outbox/*.json
+!.vscode/launch.json
