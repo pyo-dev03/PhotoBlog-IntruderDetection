@@ -9,7 +9,7 @@ ROOT
  ├─ PhotoBlogServer/   Django Server  (REST API + 감지 수신/통계/확인 처리 + 대시보드 웹)
  ├─ PhotoViewer/       Android Client (감지 목록·필터·확인 처리)
  ├─ YOLOv5/            Edge Client    (YOLOv5 + changedetection.py → 서버 전송)
- └─ 모바일/웹서비스 프로젝트 공통평가 02_수행 결과 보고서.docx
+ └─ 모바일_웹서비스 프로젝트 공통평가 02_수행 결과 보고서.docx
 ```
 
 ## 시스템 구성 (강의자료 p.3)
@@ -45,6 +45,8 @@ python detect.py --source 0 --no-send                                  # 강의 
 python detect.py --source 0 --server http://127.0.0.1:8000 \
        --username admin --password <pw> --device-name macbook-cam0       # 웹캠 → 서버 전송
 python detect.py --source data/videos/intruder_demo.mp4 --server https://vyjsjs.pythonanywhere.com ...
+# 서버에 닿지 못한 감지는 outbox 에 보관됨 → 접속 가능한 곳(예: PythonAnywhere 콘솔)에서 재전송
+python changedetection.py --outbox edge_outbox --server https://vyjsjs.pythonanywhere.com --token <API 토큰>
 
 # 3) Android : PhotoViewer 를 Android Studio 로 열어 실행 → 메뉴 > 로그인·설정
 ```
@@ -58,7 +60,7 @@ python detect.py --source data/videos/intruder_demo.mp4 --server https://vyjsjs.
 | 5-6 | 블로그 등록 결과 (localhost) | `PhotoBlogServer/blog/` |
 | 7 | 모바일 화면 확인 | `PhotoViewer/` (감지 요약·필터 칩·확인 처리), 반응형 웹 |
 | 8-9 | PythonAnywhere | 아래 배포 절차 |
-| 10 | 편의 기능 2개 | 아래 표 |
+| 10 | 편의 기능 2개 | 아래 표 (보고서 10-1 ①서버, 10-2 ①클라이언트, 10-3 ②Edge) |
 
 ## 기획되지 않은 편의 기능 (2개)
 
@@ -70,6 +72,6 @@ python detect.py --source data/videos/intruder_demo.mp4 --server https://vyjsjs.
 ## 테스트
 
 ```bash
-cd PhotoBlogServer && python manage.py test          # 142 tests (감지 API/통계/대시보드 21개 추가)
-cd YOLOv5 && python -m pytest tests/test_changedetection.py   # 7 tests (변화 감지, 깜빡임, 쿨다운, 오프라인 큐)
+cd PhotoBlogServer && python manage.py test          # 142 tests (감지 API/통계/대시보드 17개 추가)
+cd YOLOv5 && python -m pytest tests/test_changedetection.py   # 9 tests (변화 감지, 깜빡임, 쿨다운, 관심 클래스, 오프라인 큐·outbox 이동 재전송)
 ```
