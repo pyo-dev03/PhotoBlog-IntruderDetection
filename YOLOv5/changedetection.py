@@ -112,7 +112,8 @@ class ChangeDetection:
             return True
         except (requests.RequestException, KeyError, ValueError) as e:
             self.token = ""
-            self.log(f"login failed ({e}) -> 감지는 outbox 에 저장 후 서버 복구 시 재전송")
+            reason = "connection refused" if isinstance(e, requests.ConnectionError) else type(e).__name__
+            self.log(f"login failed ({reason}) -> 감지는 outbox 에 저장 후 서버 복구 시 재전송")
             return False
 
     # ------------------------------------------------------------------ 변화 감지
@@ -133,6 +134,7 @@ class ChangeDetection:
 
         now = time.time()
         stable = list(self.result_prev)
+        present = []  # 이번 프레임에 실제로 보이는 (필터 통과) 클래스
         i = 0
         while i < len(self.result_prev):
             current = detected_current[i]
@@ -141,6 +143,8 @@ class ChangeDetection:
                 current = 0
             if current and best_conf.get(names[i], 1.0) < self.min_conf:
                 current = 0
+            if current:
+                present.append(i)
             # 깜빡임 억제 (히스테리시스)
             if current:
                 self._seen_streak[i] += 1
@@ -165,13 +169,18 @@ class ChangeDetection:
                     self.log(f"cooldown: {names[i]} ({now - self._last_sent[i]:.1f}s < {self.cooldown}s)")
             i += 1
 
-        self.result_prev = stable[:]  # 객체 검출 상태 저장
-
         if change_flag == 1:
-            # 현재 프레임에 함께 보이는 다른 객체도 본문에 기록
+            # 현재 프레임에 함께 보이는 다른 객체도 본문에 기록하고, 이번 게시물로 함께 보고된 것으로 처리
+            # (몇 프레임 뒤 같은 장면이 별도 게시물로 중복 전송되는 것을 방지)
+            for i in present:
+                stable[i] = 1
             others = [n for n in best_conf if n + ", " not in self.text]
             if others:
                 self.text += "(함께 검출: " + ", ".join(others) + ")"
+
+        self.result_prev = stable[:]  # 객체 검출 상태 저장
+
+        if change_flag == 1:
             self.send(save_dir, image, detections)
 
     # ------------------------------------------------------------------ 전송

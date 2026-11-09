@@ -60,6 +60,7 @@ def detection_stats(queryset, now=None):
     device_list = sorted(devices.values(), key=lambda d: d['last'] or now - timedelta(days=9999), reverse=True)
     for d in device_list:
         d['online'] = bool(d['last'] and now - d['last'] <= timedelta(minutes=10))
+        d['last_display'] = d['last'].strftime('%Y-%m-%d %H:%M:%S') if d['last'] else '-'
         d['last'] = d['last'].isoformat() if d['last'] else None
     return {
         'total': queryset.count(),

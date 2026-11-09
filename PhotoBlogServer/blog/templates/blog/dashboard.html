@@ -51,7 +51,7 @@
         {% for d in stats.devices %}
         <div class="device">
             <span class="dot {% if d.online %}on{% endif %}"></span>
-            <b>{{ d.device }}</b> <span class="date">· {{ d.count }}건 · 마지막 {{ d.last|slice:":19"|cut:"T"|default:"-" }}</span>
+            <b>{{ d.device }}</b> <span class="date">· {{ d.count }}건 · 마지막 {{ d.last_display }}</span>
         </div>
         {% empty %}<p class="date">등록된 장치가 없습니다.</p>{% endfor %}
     </section>

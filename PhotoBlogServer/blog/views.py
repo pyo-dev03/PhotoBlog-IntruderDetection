@@ -131,9 +131,9 @@ class BlogImages(viewsets.ModelViewSet):
 
     GET  /api_root/Post/            게시물 목록(JSON Array)
          ?search=키워드              제목/본문 검색
-         ?since=2026-10-14T12:00:00+09:00   이 시각 이후 변경된 게시물만 (편의기능 ① 증분 동기화)
-         If-None-Match: "<etag>"    변경이 없으면 304 Not Modified (편의기능 ①)
-         ?label=person              공통평가02 : 검출 클래스 필터
+         ?since=2026-10-14T12:00:00+09:00   이 시각 이후 변경된 게시물만 (공통평가01 증분 동기화)
+         If-None-Match: "<etag>"    변경이 없으면 304 Not Modified (공통평가01)
+         ?label=person              공통평가02 편의기능① : 검출 클래스 필터
          ?source=edge|manual        YOLO 감지 게시물 / 직접 게시물
          ?date=2026-11-09           날짜(서버 시간대) 필터
          ?unacked=1                 미확인 감지만

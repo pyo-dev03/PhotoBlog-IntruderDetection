@@ -156,3 +156,11 @@ def test_outbox_resent_on_restart(tmp_path, monkeypatch, server):
     cd2 = make(tmp_path, monkeypatch)  # 재시작 시 outbox 재전송
     cd2.close(wait=5)
     assert len(server.posts) == 1
+
+
+def test_co_detected_objects_reported_once(tmp_path, monkeypatch, server):
+    cd = make(tmp_path, monkeypatch, min_frames=3)
+    # person 이 먼저 확정되는 순간 같이 보이던 cell phone 은 같은 게시물에 포함 -> 몇 프레임 뒤 중복 게시 없음
+    feed(cd, [0], [0, 3], [0, 3], [0, 3], [0, 3], [0, 3])
+    assert len(server.posts) == 1
+    assert "cell phone" in server.posts[0]["text"]

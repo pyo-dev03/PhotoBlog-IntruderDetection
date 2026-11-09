@@ -307,7 +307,7 @@ def run(
                         with open(f"{txt_path}.txt", "a") as f:
                             f.write(("%g " * len(line)).rstrip() % line + "\n")
 
-                    if save_img or save_crop or view_img:  # Add bbox to image
+                    if save_img or save_crop or view_img or cd is not None:  # Add bbox to image (added: 서버 전송 이미지에도 박스)
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f"{names[c]} {conf:.2f}")
                         annotator.box_label(xyxy, label, color=colors(c, True))
@@ -454,7 +454,7 @@ def parse_opt():
     parser.add_argument("--no-send", action="store_true", help="do not send detections to the server")
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
-    print_args(vars(opt))
+    print_args({k: ("********" if k == "password" and v else v) for k, v in vars(opt).items()})  # added : 비밀번호 출력 숨김
     return opt
 
 
