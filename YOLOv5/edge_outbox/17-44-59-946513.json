@@ -1,0 +1,1 @@
+{"data": {"title": "cat", "text": "cat, ", "created_date": "2026-11-09T17:44:59.946513+09:00", "published_date": "2026-11-09T17:44:59.946513+09:00", "detections": "[{\"label\": \"cat\", \"confidence\": 0.8058, \"box\": [30.0, 34.0, 377.0, 363.0]}]", "device": "edge-cam0"}, "image": "17-44-59-946513.jpg"}

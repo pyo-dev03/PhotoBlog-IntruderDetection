@@ -1,0 +1,1 @@
+{"data": {"title": "tv", "text": "tv, ", "created_date": "2026-11-09T17:44:37.287845+09:00", "published_date": "2026-11-09T17:44:37.287845+09:00", "detections": "[{\"label\": \"tv\", \"confidence\": 0.4553, \"box\": [368.0, 301.0, 509.0, 402.0]}]", "device": "edge-cam0"}, "image": "17-44-37-287845.jpg"}
