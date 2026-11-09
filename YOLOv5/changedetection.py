@@ -27,6 +27,7 @@ import json
 import os
 import pathlib
 import queue
+import shutil
 import socket
 import threading
 import time
@@ -271,22 +272,32 @@ class ChangeDetection:
         return self.outbox / (pathlib.Path(image_path).stem + ".json")
 
     def _save_outbox(self, data, image_path):
+        """전송 실패한 감지를 outbox 에 보관. 이미지도 함께 복사해 폴더째 다른 장비로 옮겨도 재전송 가능"""
         p = self._outbox_json(image_path)
         if not p.exists():
-            p.write_text(json.dumps({"data": data, "image": str(image_path)}, ensure_ascii=False), encoding="utf-8")
+            local = self.outbox / pathlib.Path(image_path).name
+            if not local.exists() and os.path.exists(image_path):
+                shutil.copy2(image_path, local)
+            p.write_text(json.dumps({"data": data, "image": local.name}, ensure_ascii=False), encoding="utf-8")
 
     def _remove_outbox(self, image_path):
         p = self._outbox_json(image_path)
         if p.exists():
             p.unlink()
+        local = self.outbox / pathlib.Path(image_path).name
+        if local.exists():  # outbox 에 복사해 둔 이미지 (전송 완료 시 정리)
+            local.unlink()
 
     def _requeue_outbox(self):
         pending = sorted(self.outbox.glob("*.json"))
         for p in pending:
             try:
                 item = json.loads(p.read_text(encoding="utf-8"))
-                if os.path.exists(item["image"]):
-                    self._q.put((item["data"], item["image"], 0))
+                image = self.outbox / item["image"]  # outbox 폴더 기준 상대 경로
+                if not image.exists():
+                    image = pathlib.Path(item["image"])
+                if image.exists():
+                    self._q.put((item["data"], str(image), 0))
                 else:
                     p.unlink()
             except (ValueError, KeyError, OSError):
@@ -306,3 +317,23 @@ class ChangeDetection:
     def log(self, msg):
         if self.verbose:
             print(f"[ChangeDetection] {msg}", flush=True)
+
+
+if __name__ == "__main__":
+    # outbox 재전송 도구 : Edge 가 서버에 닿지 못해 보관한 감지를 연결 가능한 장비/시점에 전송
+    #   python changedetection.py --outbox runs/detect/outbox --server https://vyjsjs.pythonanywhere.com --username ... --password ...
+    import argparse
+
+    ap = argparse.ArgumentParser(description="flush ChangeDetection outbox to PhotoBlogServer")
+    ap.add_argument("--outbox", required=True)
+    ap.add_argument("--server", default=None)
+    ap.add_argument("--username", default=None)
+    ap.add_argument("--password", default=None)
+    ap.add_argument("--device-name", default=None)
+    ap.add_argument("--wait", type=float, default=120)
+    a = ap.parse_args()
+    cd = ChangeDetection(["person"], host=a.server, username=a.username, password=a.password,
+                         device_name=a.device_name, outbox=a.outbox)
+    cd.close(wait=a.wait)
+    left = len(list(pathlib.Path(a.outbox).glob("*.json")))
+    print(f"[ChangeDetection] outbox remaining = {left}")

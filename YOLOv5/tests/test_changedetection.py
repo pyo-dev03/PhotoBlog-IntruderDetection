@@ -164,3 +164,22 @@ def test_co_detected_objects_reported_once(tmp_path, monkeypatch, server):
     feed(cd, [0], [0, 3], [0, 3], [0, 3], [0, 3], [0, 3])
     assert len(server.posts) == 1
     assert "cell phone" in server.posts[0]["text"]
+
+
+def test_outbox_is_portable(tmp_path, monkeypatch, server):
+    """outbox 폴더만 다른 장비로 옮겨도 (원본 이미지 없이) 재전송된다"""
+    import shutil
+
+    server.down = True
+    cd = make(tmp_path, monkeypatch)
+    feed(cd, [0])
+    cd._stop.set()
+    moved = tmp_path / "moved_outbox"
+    shutil.copytree(tmp_path / "outbox", moved)
+    shutil.rmtree(tmp_path / "runs")  # 원본 detected 이미지 삭제
+    assert len(list(moved.glob("*.jpg"))) == 1
+    server.down = False
+    cd2 = ChangeDetection(NAMES, outbox=str(moved), verbose=False)
+    cd2.close(wait=5)
+    assert len(server.posts) == 1
+    assert not list(moved.glob("*"))
