@@ -1,0 +1,36 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+    {# 편의기능 ① : 감지 클래스 / 미확인 필터 #}
+    <div class="filter-bar">
+        <a class="chip {% if not label and not source and not unacked %}on{% endif %}" href="{% url 'post_list' %}">전체</a>
+        <a class="chip {% if source == 'edge' and not label %}on{% endif %}" href="?source=edge">YOLO 감지</a>
+        <a class="chip warn {% if unacked %}on{% endif %}" href="?unacked=1">미확인 {{ stats.unacked }}</a>
+        {% for item in top_labels %}
+        <a class="chip {% if label == item.label %}on{% endif %}" href="?label={{ item.label|urlencode }}">{{ item.label }} <b>{{ item.count }}</b></a>
+        {% endfor %}
+    </div>
+
+    {% for post in posts %}
+    <div class="post{% if post.source == 'edge' and not post.acknowledged %} post-new{% endif %}">
+        <div class="date">{{ post.published_date }}{% if post.device %} · 📷 {{ post.device }}{% else %} · {{ post.author.username }}{% endif %}</div>
+        <h1><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h1>
+        <p>{{ post.text|linebreaksbr|truncatechars_html:200 }}</p>
+        {% if post.source == 'edge' %}
+        <div class="labels">
+            {% for name in post.label_list %}<a class="label-tag" href="?label={{ name|urlencode }}">{{ name }}</a>{% endfor %}
+            {% if post.acknowledged %}<span class="ack-tag ok">확인됨</span>{% else %}<span class="ack-tag">미확인</span>{% endif %}
+        </div>
+        {% endif %}
+        {% if post.thumbnail %}
+        <a href="{% url 'post_detail' pk=post.pk %}">
+            <img src="{{ post.thumbnail.url }}" class="blog-image-list" alt="{{ post.title }}" loading="lazy">
+        </a>
+        {% elif post.image %}
+        <img src="{{ post.image.url }}" class="blog-image-list" alt="{{ post.title }}" loading="lazy">
+        {% endif %}
+    </div>
+    {% empty %}
+    <p>{% if label or source or unacked %}조건에 맞는 게시물이 없습니다.{% else %}아직 게시물이 없습니다.{% endif %}</p>
+    {% endfor %}
+{% endblock %}

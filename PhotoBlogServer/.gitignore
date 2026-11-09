@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+venv/
+.venv/
+db.sqlite3
+staticfiles/
+.coverage
+# 업로드된 이미지 (기본 이미지는 포함)
+media/blog_image/20*/
+media/blog_thumb/
+socket_server/request/
+htmlcov/

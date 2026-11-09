@@ -1,0 +1,90 @@
+{% extends 'blog/base.html' %}
+{% block title %}대시보드{% endblock %}
+{% block colclass %}col-md-12{% endblock %}
+
+{% block content %}
+<div id="live-banner" class="live-banner" hidden>
+    새 감지 <b id="live-count">0</b>건이 도착했습니다. <a href="{% url 'dashboard' %}">새로고침</a>
+</div>
+
+<div class="kpis">
+    <div class="kpi"><div class="kpi-label">오늘 감지</div><div class="kpi-value">{{ stats.today }}</div></div>
+    <div class="kpi warn"><div class="kpi-label">미확인</div><div class="kpi-value"><a href="{% url 'post_list' %}?unacked=1">{{ stats.unacked }}</a></div></div>
+    <div class="kpi"><div class="kpi-label">누적 감지 / 전체 게시물</div><div class="kpi-value">{{ stats.edge_total }} <small>/ {{ stats.total }}</small></div></div>
+    <div class="kpi"><div class="kpi-label">최다 검출 클래스</div><div class="kpi-value small-text">{{ stats.top_label|default:"-" }}</div></div>
+</div>
+
+<div class="panels">
+    <section class="panel-box">
+        <h3>최근 24시간 시간대별 감지</h3>
+        <div class="hour-chart">
+            {% for h in hours %}
+            <div class="hour-col" title="{{ h.hour }}시 : {{ h.count }}건">
+                <div class="hour-bar" style="height: {{ h.pct }}%">{% if h.count %}<span>{{ h.count }}</span>{% endif %}</div>
+                <div class="hour-label">{% if h.hour|divisibleby:3 %}{{ h.hour }}{% endif %}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    <section class="panel-box">
+        <h3>클래스별 감지</h3>
+        {% for x in label_bars %}
+        <a class="hbar" href="{% url 'post_list' %}?label={{ x.label|urlencode }}">
+            <span class="hbar-name">{{ x.label }}</span>
+            <span class="hbar-track"><span class="hbar-fill" style="width: {{ x.pct }}%"></span></span>
+            <span class="hbar-val">{{ x.count }}</span>
+        </a>
+        {% empty %}<p class="date">아직 감지 기록이 없습니다.</p>{% endfor %}
+    </section>
+    <section class="panel-box">
+        <h3>최근 7일</h3>
+        {% for x in day_bars %}
+        <div class="hbar">
+            <span class="hbar-name">{{ x.date|slice:"5:" }}</span>
+            <span class="hbar-track"><span class="hbar-fill alt" style="width: {{ x.pct }}%"></span></span>
+            <span class="hbar-val">{{ x.count }}</span>
+        </div>
+        {% endfor %}
+    </section>
+    <section class="panel-box">
+        <h3>Edge 장치</h3>
+        {% for d in stats.devices %}
+        <div class="device">
+            <span class="dot {% if d.online %}on{% endif %}"></span>
+            <b>{{ d.device }}</b> <span class="date">· {{ d.count }}건 · 마지막 {{ d.last|slice:":19"|cut:"T"|default:"-" }}</span>
+        </div>
+        {% empty %}<p class="date">등록된 장치가 없습니다.</p>{% endfor %}
+    </section>
+</div>
+
+<h3 class="section-title">최근 감지</h3>
+<div class="recent-grid">
+    {% for post in recent %}
+    <a class="recent-item{% if not post.acknowledged %} unacked{% endif %}" href="{% url 'post_detail' pk=post.pk %}">
+        <img src="{% if post.thumbnail %}{{ post.thumbnail.url }}{% else %}{{ post.image.url }}{% endif %}" alt="{{ post.title }}" loading="lazy">
+        <div class="recent-cap"><b>{{ post.title }}</b><br><span>{{ post.published_date|date:"m-d H:i:s" }}</span></div>
+    </a>
+    {% empty %}<p class="date">YOLO 감지 게시물이 없습니다.</p>{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 편의기능 ① : 10초마다 통계 API 를 조회해 새 감지가 오면 배너 표시 (페이지 새로고침 없이)
+(function () {
+    var base = {{ stats.edge_total }};
+    function poll() {
+        fetch('/api_root/Post/stats/', {headers: {'Accept': 'application/json'}})
+            .then(function (r) { return r.json(); })
+            .then(function (s) {
+                if (s.edge_total > base) {
+                    document.getElementById('live-count').textContent = s.edge_total - base;
+                    document.getElementById('live-banner').hidden = false;
+                    document.title = '(' + (s.edge_total - base) + ') 대시보드 · Photo blog';
+                }
+            }).catch(function () {});
+    }
+    setInterval(poll, 10000);
+})();
+</script>
+{% endblock %}

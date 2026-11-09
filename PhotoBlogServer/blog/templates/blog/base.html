@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Intruder Detection{% endblock %} · Photo blog</title>
+    {# CDN 이 막힌 환경(PythonAnywhere 무료 계정 등)에서도 동작하도록 정적 파일로 포함 #}
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+</head>
+<body>
+    <div class="page-header">
+        <div class="top-menu">
+            {% if user.is_authenticated %}
+                <span class="user-name">{{ user.username }}</span>
+                <a href="{% url 'post_new' %}" title="새 게시물"><span class="glyphicon glyphicon-plus"></span></a>
+                <form method="post" action="{% url 'admin:logout' %}" class="inline-form">
+                    {% csrf_token %}
+                    <button type="submit" class="link-button" title="로그아웃"><span class="glyphicon glyphicon-log-out"></span></button>
+                </form>
+            {% else %}
+                <a href="{% url 'admin:login' %}?next={{ request.path }}" title="로그인"><span class="glyphicon glyphicon-lock"></span></a>
+            {% endif %}
+        </div>
+        <h1><a href="/">Intruder Detection</a></h1>
+        <nav class="main-nav">
+            <a href="{% url 'post_list' %}" class="{% if request.resolver_match.url_name == 'post_list' %}active{% endif %}">감지 목록</a>
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">대시보드</a>
+            <a href="/api_root/">REST API</a>
+        </nav>
+    </div>
+    <div class="content container">
+        <div class="row">
+            <div class="{% block colclass %}col-md-8{% endblock %}">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

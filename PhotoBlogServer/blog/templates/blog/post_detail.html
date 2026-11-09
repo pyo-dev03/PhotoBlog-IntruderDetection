@@ -1,0 +1,41 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="post">
+    {% if post.published_date %}
+    <div class="date">{{ post.published_date }} · {{ post.author.username }}{% if post.device %} · 📷 {{ post.device }}{% endif %}</div>
+    {% endif %}
+    {% if user.is_authenticated and user == post.author or user.is_staff %}
+    <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">
+        <span class="glyphicon glyphicon-pencil"></span>
+    </a>
+    {% if post.source == 'edge' %}
+    <form method="post" action="{% url 'post_ack' pk=post.pk %}" class="inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="value" value="{% if post.acknowledged %}0{% else %}1{% endif %}">
+        <button class="btn {% if post.acknowledged %}btn-default{% else %}btn-warning{% endif %}" type="submit">
+            {% if post.acknowledged %}확인 취소{% else %}✔ 확인 처리{% endif %}
+        </button>
+    </form>
+    {% endif %}
+    {% endif %}
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.text|linebreaksbr }}</p>
+    {% if post.image %}
+    <img src="{{ post.image.url }}" class="blog-image-detail" alt="{{ post.title }}">
+    {% endif %}
+    {% if post.detections %}
+    <table class="table table-condensed det-table">
+        <thead><tr><th>#</th><th>클래스</th><th>신뢰도</th><th>Box (x1, y1, x2, y2)</th></tr></thead>
+        <tbody>
+        {% for d in post.detections %}
+        <tr><td>{{ forloop.counter }}</td><td><span class="label-tag">{{ d.label }}</span></td>
+            <td>{% if d.confidence is not None %}{% widthratio d.confidence 1 100 %}%{% endif %}</td>
+            <td class="mono">{{ d.box|join:", " }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="date">{% if post.acknowledged %}확인 : {{ post.acknowledged_at }}{% else %}아직 확인되지 않은 감지입니다.{% endif %}</p>
+    {% endif %}
+</div>
+{% endblock %}

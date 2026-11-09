@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PhotoViewer</string>
+    <string name="btn_sync">동기화</string>
+    <string name="btn_upload">새로운 이미지 게시</string>
+    <string name="menu_search">검색</string>
+    <string name="menu_settings">로그인 · 설정</string>
+    <string name="menu_clear_cache">이미지 캐시 비우기</string>
+</resources>
