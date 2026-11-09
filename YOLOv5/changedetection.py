@@ -33,7 +33,6 @@ import threading
 import time
 from datetime import datetime
 
-import cv2
 import requests
 
 
@@ -113,7 +112,7 @@ class ChangeDetection:
             return True
         except (requests.RequestException, KeyError, ValueError) as e:
             self.token = ""
-            reason = "connection refused" if isinstance(e, requests.ConnectionError) else type(e).__name__
+            reason = "server unreachable" if isinstance(e, requests.ConnectionError) else type(e).__name__
             self.log(f"login failed ({reason}) -> 감지는 outbox 에 저장 후 서버 복구 시 재전송")
             return False
 
@@ -194,6 +193,8 @@ class ChangeDetection:
 
         full_path = save_path / "{0}-{1}-{2}-{3}.jpg".format(today.hour, today.minute, today.second, today.microsecond)
 
+        import cv2  # outbox 재전송만 할 때(cv2 없는 서버 콘솔 등)는 필요 없도록 지연 import
+
         dst = cv2.resize(image, dsize=self.send_size, interpolation=cv2.INTER_AREA)
         cv2.imwrite(str(full_path), dst)
 
@@ -218,6 +219,7 @@ class ChangeDetection:
         }
         self.stats["events"] += 1
         self.log(f"EVENT  {self.title!r}  {self.text!r}  -> {full_path.name}")
+        self._save_outbox(data, str(full_path))  # 먼저 outbox 에 기록(write-ahead) → 전송 성공 시 삭제, 프로그램이 종료돼도 유실 없음
         self._q.put((data, str(full_path), 0))
 
     def _post(self, data, image_path):
