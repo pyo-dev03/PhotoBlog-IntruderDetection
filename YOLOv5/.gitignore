@@ -255,3 +255,4 @@ fabric.properties
 !edge_outbox/*.jpg
 !edge_outbox/*.json
 !.vscode/launch.json
+!data/videos/intruder_demo.mp4
