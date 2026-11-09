@@ -61,6 +61,7 @@ class ChangeDetection:
         outbox="outbox",
         timeout=10,
         verbose=True,
+        token=None,
     ):
         """names : YOLO 클래스 이름 (list 또는 {index: name} dict)."""
         self.names = names
@@ -91,7 +92,11 @@ class ChangeDetection:
         self._q = queue.Queue()
         self._stop = threading.Event()
 
-        self.login()  # 강의자료 p.8 : 토큰 발급
+        self.token = token or os.environ.get("PHOTOBLOG_TOKEN", "")
+        if self.token:  # 서버 관리자가 발급한 토큰을 직접 사용 (비밀번호 불필요)
+            self.log(f"use given token  host={self.HOST}  device={self.device_name}")
+        else:
+            self.login()  # 강의자료 p.8 : 토큰 발급
         self._worker = threading.Thread(target=self._send_loop, name="photoblog-sender", daemon=True)
         self._worker.start()
         self._requeue_outbox()  # 이전 실행에서 못 보낸 감지 재전송
@@ -331,11 +336,12 @@ if __name__ == "__main__":
     ap.add_argument("--server", default=None)
     ap.add_argument("--username", default=None)
     ap.add_argument("--password", default=None)
+    ap.add_argument("--token", default=None, help="API token (instead of username/password)")
     ap.add_argument("--device-name", default=None)
     ap.add_argument("--wait", type=float, default=120)
     a = ap.parse_args()
     cd = ChangeDetection(["person"], host=a.server, username=a.username, password=a.password,
-                         device_name=a.device_name, outbox=a.outbox)
+                         device_name=a.device_name, outbox=a.outbox, token=a.token)
     cd.close(wait=a.wait)
     left = len(list(pathlib.Path(a.outbox).glob("*.json")))
     print(f"[ChangeDetection] outbox remaining = {left}")
